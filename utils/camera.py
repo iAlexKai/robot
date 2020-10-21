@@ -90,6 +90,8 @@ def open_cam_usb(dev, width, height):
     else:
         return cv2.VideoCapture(dev)
 
+def open_cam_local(dev):
+    return cv2.VideoCapture(dev)
 
 def open_cam_onboard(width, height):
     """Open the Jetson onboard camera."""
@@ -159,12 +161,18 @@ class Camera():
         """Open camera based on command line arguments."""
         assert self.cap is None, 'Camera is already opened!'
         args = self.args
-
+        '''
         self.cap = open_cam_usb(
             args.video_dev,
             args.image_width,
             args.image_height
         )
+        
+        self.cap = open_cam_local(
+            args.video_dev
+        )
+        '''
+        
         self.use_thread = True
         
         if self.cap != 'OK':

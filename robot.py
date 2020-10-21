@@ -48,7 +48,7 @@ directionStates = ("left", "right", "straight", "stop")
 curCarState = "straight"
 
 # open the serial
-serial_agent = serial.Serial("/dev/ttyUSB0", 9600)
+#serial_agent = serial.Serial("/dev/ttyUSB0", 9600)
 
 
 def set_config():
@@ -345,12 +345,14 @@ def detect_and_alarm():
     RUN_TIME = False
     global DETECT_TIME
 
-    cam = Camera_for_Robot(video_dev=DETECT_ID, image_width=IMAGE_WIDTH, image_height=IMAGE_HEIGHT)
+    #cam = Camera_for_Robot(video_dev=DETECT_ID, image_width=IMAGE_WIDTH, image_height=IMAGE_HEIGHT)
+    cam = Camera_for_Robot(video_dev='./test.mp4', image_width=IMAGE_WIDTH, image_height=IMAGE_HEIGHT)
     cam.open()
+
 
     if not cam.is_opened:
         print("Capture road opens failure")
-        return
+        #return
     cam.start()
 
     open_window(WINDOW_NAME, IMAGE_WIDTH, IMAGE_HEIGHT,
@@ -375,9 +377,9 @@ def main():
     currentX = set_config()
     # init_GPIO_and_lift_up()
 
-    run_straight()
+    #run_straight()
     detect_and_alarm()
-    stop_and_close()
+    #stop_and_close()
 
 
 if __name__ == "__main__":
