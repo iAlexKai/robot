@@ -4,6 +4,7 @@ from utils.visualization import open_window, show_fps, record_time, show_runtime
 from utils.engine import BBoxVisualization
 from utils.yolo_classes import get_cls_dict
 from utils.yolov3 import TrtYOLOv3
+import RPi.GPIO as GPIO
 
 import numpy as np
 import RPi.GPIO
@@ -36,11 +37,11 @@ cutHeight = 240
 
 # global variables for peripherals and GPIO
 Buzzer_Pin = 0
-LED_RED = 1
-LED_GREEN = 2
-Lifter_Button = 27
-Lifter_Up = 28
-Lifter_Down = 29
+Light = 36
+Lifter_Button = 38
+Lifter_Up = 40
+lifting_time = 10
+
 FOUND_CARS_PORT = 40
 
 # car direction states
@@ -69,32 +70,33 @@ def set_config():
     return StraghtValue
 
 
-def init_GPIO_and_lift_up():
+def init_GPIO():
     GPIO.setmode(GPIO.BOARD);
-    GPIO.setup(LED_RED, GPIO.OUT);
-    GPIO.setup(LED_GREEN, GPIO.OUT);
-    GPIO.setup(Buzzer_Pin, GPIO.OUT);
-    GPIO.setup(Lifter_Button, GPIO.OUT);
-    GPIO.setup(Lifter_Up, GPIO.OUT);
-    GPIO.setup(Lifter_Down, GPIO.OUT);
+    # The light
+    GPIO.setup(Light, GPIO.OUT)
+    # The lifter
+    GPIO.setup(Lifter_Button, GPIO.OUT)
+    GPIO.setup(Lifter_Up, GPIO.OUT)
 
-    GPIO.output(Buzzer_Pin, GPIO.HIGH);
-    GPIO.output(LED_RED, GPIO.HIGH);
-    GPIO.output(LED_GREEN, GPIO.HIGH);
-    GPIO.output(Lifter_Button, GPIO.HIGH);
-    GPIO.output(Lifter_Up, GPIO.HIGH);
-    GPIO.output(Lifter_Down, GPIO.HIGH);
-
-    GPIO.setup(FOUND_CARS_PORT, GPIO.IN);
-    time.sleep(15)
+    GPIO.output(Lifter_Button, GPIO.HIGH)
+    GPIO.output(Lifter_Up, GPIO.HIGH)
+    
+    print("Finish initializing the light and lifter")
 
 
 def lifter_up():
-    pass
+    GPIO.output(Lifter_Button,GPIO.LOW)
+    time.sleep(lifting_time)
+    GPIO.output(Lifter_Button,GPIO.HIGH)
+    GPIO.output(Lifter_Up,GPIO.HIGH)
 
 
 def lifter_down():
-    pass
+    start_time = time.time()
+    GPIO.output(Lifter_Up, GPIO.LOW)
+    time.sleep(lifting_time)
+    GPIO.output(Lifter_Up,GPIO.HIGH)
+    GPIO.output(Lifter_Button,GPIO.HIGH)
 
 
 def go_straight():
@@ -103,6 +105,14 @@ def go_straight():
     outputCommand = bytes("$AP0:{}X254Y127A127B!".format(str(currentX)), encoding='utf8')
     serial_agent.write(outputCommand)
 
+
+def light_on():  
+    GPIO.output(Light, GPIO.LOW)
+
+
+def light_off():
+    GPIO.output(Light, GPIO.HIGH)
+        
 
 # the larger the X, the left it turns
 def turn_left():
@@ -368,18 +378,28 @@ def detect_and_alarm():
     cv2.destroyAllWindows()
     print("Detection finishes successfully")
 
+
+def init_all():
+    init_GPIO()
+    light_on()
+    lifter_up()
+
 def stop_and_close():
+    lifter_down()
+    light_off()
     serial_agent.close()
     pass
 
 
 def main():
+    
+    init_all()
+    
     currentX = set_config()
-    # init_GPIO_and_lift_up()
-
-    #run_straight()
+    run_straight()
     detect_and_alarm()
-    #stop_and_close()
+    
+    stop_and_close()
 
 
 if __name__ == "__main__":
