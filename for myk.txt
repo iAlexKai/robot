@@ -1,1 +1,0 @@
-The print info of the detected cars are in utils/engine.py
