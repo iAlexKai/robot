@@ -23,6 +23,9 @@ SUPPORTED_MODELS = [
     'ssd_mobilenet_v2_coco'
 ]
 
+# Camera Infomation
+FRAME_DIFF = 20
+CAM_FPS = 30
 
 def parse_args():
     """Parse input arguments."""
@@ -66,7 +69,7 @@ def loop_and_detect(cam, runtime, trt_yolov3, conf_th, vis, window_name, total_t
         frame_id += 1
         if frame_id % sys.maxsize == 0:
             frame_id = 0
-        elif frame_id % 20 != 0:
+        elif frame_id % FRAME_DIFF != 0:
             continue
 
         if img is not None:
@@ -81,13 +84,13 @@ def loop_and_detect(cam, runtime, trt_yolov3, conf_th, vis, window_name, total_t
             if len(car_info_list) != 0:
                 speed_calculate_pair.append(car_info_list)
                 if len(speed_calculate_pair) == 2:
-                    import pdb
-                    pdb.set_trace()
-                    _, cur_frame_car_list = search_multi_car(speed_calculate_pair)
+                    #import pdb
+                    #pdb.set_trace()
+                    _, cur_frame_car_list = search_multi_car(speed_calculate_pair, FRAME_DIFF*CAM_FPS)
                     print("Detected {} cars".format(len(cur_frame_car_list)))
                     if len(cur_frame_car_list) is not 0:
                         for item in cur_frame_car_list:
-                            print('car_id:{}, car_speed:{}, distance from camera:{}'.format(item['car_id'], item['speed'], item['car_2_cam']))
+                            print('car_id:{}, car_speed:{}, distance from camera:{}'.format(item['car_id'], item['car_speed'], item['car_2_cam']))
                     speed_calculate_pair = []
 
             fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
@@ -101,7 +104,10 @@ def main():
     args = parse_args()
     cam = Camera(args)
     cam.open()
-
+    
+    # import pdb
+    # pdb.set_trace()
+   
     if not cam.is_opened:
         sys.exit('[INFO]  Failed to open camera!')
 

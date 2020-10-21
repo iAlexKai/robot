@@ -6,6 +6,9 @@ import numpy as np
 import cv2
 import glob
 
+# global variable for speed calculation
+car_id = 0
+
 
 #标定函数
 def camera_calibrate(images_path):
@@ -136,9 +139,6 @@ def calculate_distance(left, right, knownWidth, focalLength_value):
 
 
 # 找出两帧中相同的车，并将第二帧作为初始状态
-car_id = 0
-
-
 def search_multi_car(pair, frame_time_diff, knownWidth=1.8, focalLength_value=903):
     # car_id = 0  # 初始化全局id
     global car_id
@@ -186,6 +186,7 @@ def search_multi_car(pair, frame_time_diff, knownWidth=1.8, focalLength_value=90
             car_1.update({'car_id': car_id})
             car1_2_cam = calculate_distance(car_1['left'], car_1['right'], knownWidth, focalLength_value)
             car_1.update({'car_2_cam': car1_2_cam})
+            car_1.update({'car_speed': -1})
         print('=============')
     print(all_car_dist)
     print(car_posi_0)
