@@ -15,7 +15,7 @@ from utils.camera import add_camera_args, Camera
 from utils.visualization import open_window, show_fps, record_time, show_runtime
 from utils.engine import BBoxVisualization
 
-from cal_dist import search_multi_car
+from cal_dist import search_multi_car_0, search_multi_car_1
 
 WINDOW_NAME = 'TensorRT YOLOv3 Detector'
 INPUT_HW = (300, 300)
@@ -24,7 +24,7 @@ SUPPORTED_MODELS = [
 ]
 
 # Camera Infomation
-FRAME_DIFF = 20
+FRAME_DIFF = 0.05
 CAM_FPS = 30
 
 def parse_args():
@@ -60,6 +60,7 @@ def loop_and_detect(cam, runtime, trt_yolov3, conf_th, vis, window_name, total_t
     speed_calculate_pair = []    
 
     frame_id = -1
+    first_glance = True
     while time.time() - start_time < total_time:
         if cv2.getWindowProperty(window_name, 0) < 0:
             break
@@ -69,7 +70,7 @@ def loop_and_detect(cam, runtime, trt_yolov3, conf_th, vis, window_name, total_t
         frame_id += 1
         if frame_id % sys.maxsize == 0:
             frame_id = 0
-        elif frame_id % FRAME_DIFF != 0:
+        elif frame_id % 20 != 0:
             continue
 
         if img is not None:
@@ -86,12 +87,16 @@ def loop_and_detect(cam, runtime, trt_yolov3, conf_th, vis, window_name, total_t
                 if len(speed_calculate_pair) == 2:
                     #import pdb
                     #pdb.set_trace()
-                    _, cur_frame_car_list = search_multi_car(speed_calculate_pair, FRAME_DIFF*CAM_FPS)
+                    if first_glance:
+                        _, cur_frame_car_list = search_multi_car_0(speed_calculate_pair, FRAME_DIFF*CAM_FPS) 
+                        first_glance = False
+                    else:
+                        _, cur_frame_car_list = search_multi_car_1(speed_calculate_pair, FRAME_DIFF*CAM_FPS)
                     print("Detected {} cars".format(len(cur_frame_car_list)))
                     if len(cur_frame_car_list) is not 0:
                         for item in cur_frame_car_list:
                             print('car_id:{}, car_speed:{}, distance from camera:{}'.format(item['car_id'], item['car_speed'], item['car_2_cam']))
-                    speed_calculate_pair = []
+                    speed_calculate_pair = [cur_frame_car_list]
 
             fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
             img = show_fps(img, fps)

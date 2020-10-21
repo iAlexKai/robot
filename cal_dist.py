@@ -124,7 +124,7 @@ def calculate_distance(left, right, knownWidth, focalLength_value):
     # 暂时计算两点间的水平距离
     horizontal_distance = right - left
     # 计算得到目标物体到摄像头的距离
-    distance_inches = distance_to_camera(knownWidth, focalLength_value, horizontal_distance)
+    distance_inches = distance_to_camera(horizontal_distance, knownWidth, focalLength_value)
     return distance_inches
     '''
     # 在图片中显示
@@ -139,7 +139,7 @@ def calculate_distance(left, right, knownWidth, focalLength_value):
 
 
 # 找出两帧中相同的车，并将第二帧作为初始状态
-def search_multi_car(pair, frame_time_diff, knownWidth=1.8, focalLength_value=903):
+def search_multi_car_0(pair, frame_time_diff, knownWidth=1.8, focalLength_value=450):
     # car_id = 0  # 初始化全局id
     global car_id
     car_posi_0 = pair[0]  # 第一帧所有车的位置信息[{'frame_id', 'left', 'right', ..., 'center', 'car_id'}]
@@ -153,10 +153,64 @@ def search_multi_car(pair, frame_time_diff, knownWidth=1.8, focalLength_value=90
         for car_inform_0 in car_posi_0:
             # dist = np.sqrt(sum(np.power((one['center'] - car_infor[2]), 2)))
             dist = car_1['center'][1] - car_inform_0['center'][1]
-            if dist < 0:  # 为负，则置为99999
+            if dist < -100:  # 为负，则置为99999
                 dist = 99999
             width_car = abs(car_1['center'][0] - car_inform_0['center'][0])
-            if width_car > 50:
+            if width_car > 100:
+                dist = 99999
+            # car_dist = [car_inform_0['car_id'], dist]  # car_id和距离
+            per_car_dist.append(dist)
+        all_car_dist.append(per_car_dist)
+    car_id_2 = [0, 1, 2, 3]
+    all_car_dist = np.array(all_car_dist)
+    print(all_car_dist)
+    num_car_0 = len(all_car_dist[0, :])  # 第一帧车的数量
+    print('num_car_0: ', num_car_0)
+    # b = list(chain(*a[:,:,-1])) # 将二维数组转为一维数组
+    for i, car_1 in enumerate(car_posi_1):
+        min_dist = min(all_car_dist[i, :])
+        print('min_dist:', min_dist)
+        print('----------')
+        min_dist_car_index = list(all_car_dist[i, :]).index(min_dist)
+        if min_dist < 20:
+            car_1.update({'car_id': min_dist_car_index})
+            all_car_dist[:, min_dist_car_index] = 9999
+            # 计算距离和速度
+            car0_2_cam = calculate_distance(car_posi_0[min_dist_car_index]['left'], car_posi_0[min_dist_car_index]['right'], knownWidth, focalLength_value)
+            car1_2_cam = calculate_distance(car_1['left'], car_1['right'], knownWidth, focalLength_value)
+            car_speed = (car1_2_cam - car0_2_cam) / frame_time_diff
+            car_1.update({'car_speed': car_speed})
+            car_1.update({'car_2_cam': car1_2_cam})
+        else:
+            car_id += 1
+            car_1.update({'car_id': car_id})
+            car1_2_cam = calculate_distance(car_1['left'], car_1['right'], knownWidth, focalLength_value)
+            car_1.update({'car_2_cam': car1_2_cam})
+            car_1.update({'car_speed': -1})
+        print('=============')
+    print(all_car_dist)
+    print(car_posi_0)
+    print(car_posi_1)
+
+    return car_posi_0, car_posi_1
+
+
+def search_multi_car_1(pair, frame_time_diff, knownWidth=1.8, focalLength_value=450):
+    # car_id = 0  # 初始化全局id
+    global car_id
+    car_posi_0 = pair[0]  # 第一帧所有车的位置信息[{'frame_id', 'left', 'right', ..., 'center', 'car_id'}]
+    car_posi_1 = pair[1]  # 第二帧所有车的位置信息[{'frame_id', 'left', 'right', ..., 'center', 'car_id'，'car_2_cam', 'speed'}]
+
+    all_car_dist = []  # 第二帧中每一辆车与前一帧所有车的距离
+    for car_1 in pair[1]:  # 得到all_car_dist
+        per_car_dist = []
+        for car_inform_0 in car_posi_0:
+            # dist = np.sqrt(sum(np.power((one['center'] - car_infor[2]), 2)))
+            dist = car_1['center'][1] - car_inform_0['center'][1]
+            if dist < -100:  # 为负，则置为99999
+                dist = 99999
+            width_car = abs(car_1['center'][0] - car_inform_0['center'][0])
+            if width_car > 100:
                 dist = 99999
             # car_dist = [car_inform_0['car_id'], dist]  # car_id和距离
             per_car_dist.append(dist)

@@ -18,6 +18,22 @@ import time
 # on cv2's built-in function to capture images from the webcam.
 USB_GSTREAMER = True
 
+# global variables for video
+VIDEO_ID = 0
+DETECT_ID = 0
+SAVE_VIDEO = 0
+
+# to be modified global variables
+TOTAL_RUN_TIME = 0
+DETECT_TIME = 3000
+StraghtValue = 175
+currentX = 175
+GEAR = 40
+
+# variables for frame cut
+cutWidth = 0
+cutHeight = 240
+
 # global variables for peripherals and GPIO
 Buzzer_Pin = 0
 LED_RED = 1
@@ -26,24 +42,6 @@ Lifter_Button = 27
 Lifter_Up = 28
 Lifter_Down = 29
 FOUND_CARS_PORT = 40
-
-# global variables for video
-VIDEO_ID = 0
-DETECT_ID = 0
-SAVE_VIDEO = 0
-
-# to be modified global variables
-TOTAL_RUN_TIME = 30
-DETECT_TIME = 120
-StraghtValue = 130
-
-# current x value for control direction
-currentX = 130
-GEAR = 60
-
-# variables for frame cut
-cutWidth = 0
-cutHeight = 300
 
 # car direction states
 directionStates = ("left", "right", "straight", "stop")
@@ -113,7 +111,7 @@ def turn_left():
         currentX = StraghtValue + GEAR
     elif currentX < StraghtValue + GEAR * 1.5:
         currentX = currentX + GEAR
-    print("Turning Left with value {} larger than straight".format(currentX - StraghtValue))
+    print("Turning Left with value {}".format(currentX))
 
     outputCommand =  bytes("$AP0:{}X254Y127A127B!".format(str(currentX)), encoding='utf-8')
     serial_agent.write(outputCommand)
@@ -127,7 +125,7 @@ def turn_right():
     elif currentX > StraghtValue - GEAR * 1.5:
         currentX = currentX - GEAR
 
-    print("Turning right with value {} less than straight".format(currentX - StraghtValue))
+    print("Turning right with value {}".format(currentX))
 
     outputCommand =  bytes("$AP0:{}X254Y127A127B!".format(str(currentX)), encoding='utf-8')
     serial_agent.write(outputCommand)
@@ -204,6 +202,7 @@ def filter_lanes(lines):
 
 
 def search_line(img, ):
+    frame_width = img.shape[0]
     # variables for gassian and canny
     blur_size = 5
     canny_lth = 30
@@ -225,8 +224,8 @@ def search_line(img, ):
     # points = np.array([[(0, rows), (15, 250), (630, 250), (cols, rows)]])
     points = np.array([[(0, rows), (0, cutHeight), (cols, cutHeight), (cols, rows)]])
     roi_edges = roi_mask(edges, points)
-#    cv2.imshow("roi_edges", roi_edges)
-#    cv2.waitKey(0)
+    cv2.imshow("roi_edges", roi_edges)
+    cv2.waitKey(1)
 
     drawing, lines = hough_transform(img=roi_edges, rho=rho, theta=theta,
                                      threshold=threshold, min_line_len=min_line_len, max_line_gap=max_line_gap)
@@ -246,12 +245,34 @@ def search_line(img, ):
         middleLineRightX = (cutHeight - rightB) / rightK
         middleX = (middleLineLeftX + middleLineRightX) / 2
         diffFromCentre = cols / 2 - middleX
-    else:
-        print("At least one lane not detected")
-    cv2.imshow("lines", drawing)
-    cv2.waitKey(1)
+    
+    elif left_lane is not None:
+        draw_lines(drawing, [left_lane], color=[0, 0, 255])  # 画出直线检测结果
+        leftK = (left_lane[0][1] - left_lane[0][3]) / (left_lane[0][0] - left_lane[0][2])
+        leftB = left_lane[0][1] - leftK * left_lane[0][0]
+        # print(leftK, leftB, rightK, rightB)
 
-    return left_lane is not None and right_lane is not None, diffFromCentre
+        middleLineLeftX = (cutHeight - leftB) / leftK
+        
+        middleX = (middleLineLeftX + cols) / 2
+        diffFromCentre = cols / 2 - middleX
+
+    elif right_lane is not None:
+        draw_lines(drawing, [right_lane], color=[0, 0, 255])  # 画出直线检测结果
+        rightK = (right_lane[0][1] - right_lane[0][3]) / (right_lane[0][0] - right_lane[0][2])
+        rightB = right_lane[0][1] - rightK * right_lane[0][0]
+        # print(leftK, leftB, rightK, rightB)
+
+        middleLineRightX = (cutHeight - rightB) / rightK
+        
+        middleX = (middleLineRightX + cols) / 2
+        diffFromCentre = cols / 2 - middleX
+    else:        
+        print("Neither lane is detected")
+#    cv2.imshow("lines", drawing)
+#    cv2.waitKey(1)
+
+    return left_lane is not None or right_lane is not None, diffFromCentre
 
 
 def run_straight():
@@ -279,7 +300,7 @@ def run_straight():
 
         # diff threshold for turn
         frameWidth = frame.shape[0]
-        turnValue = frameWidth
+        turnValue = frameWidth / 4
 
         lineFound, diffFromCentre = search_line(frame)
        
@@ -291,7 +312,7 @@ def run_straight():
                 assert curCarState in directionStates
         elif diffFromCentre > frameWidth or diffFromCentre < -frameWidth:
             go_straight()
-            print("inValid state, stay straight")
+            print("inValid state, diffFromCenter is {}".format(diffFromCentre))
             if curCarState is not "straight":
                 curCarState = "straight"
                 assert curCarState in directionStates
@@ -307,7 +328,7 @@ def run_straight():
                 assert curCarState in directionStates
         else:
             go_straight()
-            print("Stay staight")
+            print("Stay staight,diffFromCenter{}, turn value{}".format(diffFromCentre, turnValue))
             if curCarState is not "straight":
                 curCarState = "straight"
                 assert curCarState in directionStates
@@ -322,7 +343,7 @@ def detect_and_alarm():
     IMAGE_WIDTH = 640
     IMAGE_HEIGHT = 480
     RUN_TIME = False
-    DETECT_TIME = 30
+    global DETECT_TIME
 
     cam = Camera_for_Robot(video_dev=DETECT_ID, image_width=IMAGE_WIDTH, image_height=IMAGE_HEIGHT)
     cam.open()
@@ -351,12 +372,12 @@ def stop_and_close():
 
 
 def main():
-    #currentX = set_config()
+    currentX = set_config()
     # init_GPIO_and_lift_up()
 
-    #run_straight()
+    run_straight()
     detect_and_alarm()
-    #stop_and_close()
+    stop_and_close()
 
 
 if __name__ == "__main__":
