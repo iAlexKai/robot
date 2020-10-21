@@ -324,7 +324,6 @@ def detect_and_alarm():
     RUN_TIME = False
     DETECT_TIME = 30
 
-
     cam = Camera_for_Robot(video_dev=DETECT_ID, image_width=IMAGE_WIDTH, image_height=IMAGE_HEIGHT)
     cam.open()
 

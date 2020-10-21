@@ -15,6 +15,7 @@ from utils.camera import add_camera_args, Camera
 from utils.visualization import open_window, show_fps, record_time, show_runtime
 from utils.engine import BBoxVisualization
 
+from cal_dist import search_multi_car
 
 WINDOW_NAME = 'TensorRT YOLOv3 Detector'
 INPUT_HW = (300, 300)
@@ -41,6 +42,7 @@ def parse_args():
 
 def calculate_speed(speed_calculate_pair):
     return [1,1,1]
+
 
 def loop_and_detect(cam, runtime, trt_yolov3, conf_th, vis, window_name, total_time):
     """Continuously capture images from camera and do object detection.
@@ -79,10 +81,13 @@ def loop_and_detect(cam, runtime, trt_yolov3, conf_th, vis, window_name, total_t
             if len(car_info_list) != 0:
                 speed_calculate_pair.append(car_info_list)
                 if len(speed_calculate_pair) == 2:
-#                    import pdb
-#                    pdb.set_trace()
-                    speed_list = calculate_speed(speed_calculate_pair)
-                    print("The cars' speed is {}".format(', '.join([str(i) for i in speed_list])))
+                    import pdb
+                    pdb.set_trace()
+                    _, cur_frame_car_list = search_multi_car(speed_calculate_pair)
+                    print("Detected {} cars".format(len(cur_frame_car_list)))
+                    if len(cur_frame_car_list) is not 0:
+                        for item in cur_frame_car_list:
+                            print('car_id:{}, car_speed:{}, distance from camera:{}'.format(item['car_id'], item['speed'], item['car_2_cam']))
                     speed_calculate_pair = []
 
             fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
@@ -90,6 +95,7 @@ def loop_and_detect(cam, runtime, trt_yolov3, conf_th, vis, window_name, total_t
             cv2.imshow(window_name, img)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
 
 def main():
     args = parse_args()
