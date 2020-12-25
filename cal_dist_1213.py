@@ -1,4 +1,4 @@
-#!usr/bin/python
+7#!usr/bin/python
 # -*- coding: utf-8 -*-
 # auth: dushuai
 
@@ -126,7 +126,7 @@ def calculate_distance(left, right, knownWidth, focalLength_value):
     # 计算得到目标物体到摄像头的距离
     distance_inches = distance_to_camera(horizontal_distance, knownWidth, focalLength_value)
     return distance_inches
-    '''
+'''
     # 在图片中显示
     image = cv2.imread(image)
     cv2.imshow("image", image)
@@ -135,9 +135,7 @@ def calculate_distance(left, right, knownWidth, focalLength_value):
                 (image.shape[1] - 300, image.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX,
                 2.0, (0, 0, 255), 3)
     cv2.imshow("image", image)
-    '''
-
-#cal_speed
+'''
 #ppm:每像素实际距离
 #line:
 '''
@@ -151,90 +149,48 @@ def calculate_distance(left, right, knownWidth, focalLength_value):
 50: 126
 80: 122
 100: 
-'''
-''' 
-10: 
-20: 
-30: 
-40:
-50: 
-60: 
-70:
-80:
-90:
-100: 
+150: 120
+200:
 '''
 def cal_speed_pixel(bottom_car_0, bottom_car_1, frame_time_diff):
-    # line = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    line = [195, 170, 155, 150, 146, 142, 140, 138, 136, 135]
-    line_5 = [245]
-    # 0-5
-    ppm_0_5 = []
-    ppm_0_5.append(5 / (480 - line_5[0]))
-    ppm = []
-    # 5-10
-    ppm.append(5 / (line_5[0] - line[0]))
-    for i in range(9):
-        ppm.append(10 / (line[i] - line[i + 1]))
-
-    # 0-5
-    if (line_5[0] < bottom_car_1 <= 480):
-        pixel_length = bottom_car_1 - bottom_car_0
-        scale_real_length = pixel_length * ppm_0_5[0]
-        dis = (480 - bottom_car_1) * ppm_0_5[0]
-    # 5-10
-    if (line[0] < bottom_car_1 <= line_5[0]):
+    line = [420, 250, 215, 180, 153, 145, 138, 126, 122, 120]
+    ppm = [0.015, 0.012, 0.057, 0.14, 0.185, 0.625, 1.43, 1.67, 7.5, 20, 20]
+    if (0 <= bottom_car_0 < line[0]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[0]
-        dis = 5 + (line_5[0] - bottom_car_1) * ppm[0]
-    # 10-20
-    if (line[1] <= bottom_car_1 < line[0]):
+    if (line[0] <= bottom_car_0 < line[1]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[1]
-        dis = 10 + (line[0] - bottom_car_1) * ppm[1]
-    # 20-30
-    if (line[2] <= bottom_car_1 < line[1]):
+    if (line[1] <= bottom_car_0 < line[2]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[2]
-        dis = 20 + (line[1] - bottom_car_1) * ppm[2]
-    # 30-40
-    if (line[3] <= bottom_car_1 < line[2]):
+    if (line[2] <= bottom_car_0 < line[3]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[3]
-        dis = 30 + (line[2] - bottom_car_1) * ppm[3]
-    # 40-50
-    if (line[4] <= bottom_car_1 < line[3]):
+    if (line[3] <= bottom_car_0 < line[4]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[4]
-        dis = 40 + (line[3] - bottom_car_1) * ppm[4]
-    # 50-60
-    if (line[5] < bottom_car_1 < line[4]):
+    if (line[4] < bottom_car_0 < line[5]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[5]
-        dis = 50 + (line[4] - bottom_car_1) * ppm[5]
-    # 60-70
-    if (line[6] < bottom_car_1 < line[5]):
+    if (line[5] < bottom_car_0 < line[6]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[6]
-        dis = 60 + (line[5] - bottom_car_1) * ppm[6]
-    # 70-80
-    if (line[7] < bottom_car_1 < line[6]):
+    if (line[6] < bottom_car_0 < line[7]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[7]
-        dis = 70 + (line[6] - bottom_car_1) * ppm[7]
-    # 80-90
-    if (line[8] < bottom_car_1 < line[7]):
+    if (line[7] < bottom_car_0 < line[8]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[8]
-        dis = 80 + (line[7] - bottom_car_1) * ppm[8]
-    # 90-100
-    if (0 < bottom_car_1 < line[8]):
+    if (line[8] < bottom_car_0 < line[9]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[9]
-        dis = 90 + (line[8] - bottom_car_1) * ppm[9]
-
+    if (line[9] < bottom_car_0):
+        pixel_length = bottom_car_1 - bottom_car_0
+        scale_real_length = pixel_length * ppm[10]
     speed = scale_real_length / frame_time_diff
-    return speed, dis
+    return speed
+
 
 # 找出两帧中相同的车，并将第二帧作为初始状态
 def search_multi_car_0(pair, frame_time_diff, knownWidth=1.8, focalLength_value=450):
@@ -355,7 +311,7 @@ def search_one_car_init_0(pair):
     frame = pair[1]
     if len(frame) == 1:
         frame[0].update({'car_id': car_id})
-        frame[0].update({'car_speed': 0})
+	frame[0].update({'car_speed': 0})
         frame[0].update({'car_2_cam': 0})
         car_id += 1
     elif len(frame) > 1:
@@ -377,7 +333,7 @@ def search_one_car_init(frame):
     hori_dist = []
     if len(frame) == 1:
         frame[0].update({'car_id': car_id})
-        frame[0].update({'car_speed': 0})
+	frame[0].update({'car_speed': 0})
         frame[0].update({'car_2_cam': 0})
         car_id += 1
     elif len(frame) > 1:
@@ -394,7 +350,7 @@ def search_one_car_init(frame):
     return frame
 
 # 第一帧有一辆车时，跟踪第二帧中的那辆车
-def search_one_car(pair, frame_time_diff, knownWidth=0.038, focalLength_value=450):
+def search_one_car(pair, frame_time_diff, knownWidth=1.8, focalLength_value=450):
     # car_id = 0  # 初始化全局id
     global car_id
     car_posi_0 = pair[0]  # 第一帧单辆车的位置信息[{'frame_id', 'left', 'right', ..., 'center', 'car_id'}]
@@ -425,10 +381,10 @@ def search_one_car(pair, frame_time_diff, knownWidth=0.038, focalLength_value=45
     if min_dist < 100: #跟踪
         car_posi_1[min_dist_car_index].update({'car_id': car_posi_0[0]['car_id']})
         #all_car_dist[min_dist_car_index] = 9999
-        #car0_2_cam = calculate_distance(car_posi_0[0]['left'], car_posi_0[0]['right'], knownWidth, focalLength_value)
-        #car1_2_cam = calculate_distance(car_posi_1[min_dist_car_index]['left'], car_posi_1[min_dist_car_index]['right'], knownWidth, focalLength_value)
+        car0_2_cam = calculate_distance(car_posi_0[0]['left'], car_posi_0[0]['right'], knownWidth, focalLength_value)
+        car1_2_cam = calculate_distance(car_posi_1[min_dist_car_index]['left'], car_posi_1[min_dist_car_index]['right'], knownWidth, focalLength_value)
         #car_speed = (car1_2_cam - car0_2_cam) / frame_time_diff
-        car_speed, car1_2_cam = cal_speed_pixel(car_posi_0[0]['down'], car_posi_1[min_dist_car_index]['down'], frame_time_diff)
+        car_speed = cal_speed_pixel(car_posi_0[0]['down'], car_posi_1[min_dist_car_index]['down'], frame_time_diff)
         car_posi_1[min_dist_car_index].update({'car_speed': car_speed})
         car_posi_1[min_dist_car_index].update({'car_2_cam': car1_2_cam})
         car_posi_1 = [car_posi_1[min_dist_car_index]] #只保留一辆车的信息
@@ -454,9 +410,9 @@ if __name__ == "__main__":
            [{'frame_id':1, 'center': (192,226)}, {'frame_id':1, 'center': (100,-75)},
             {'frame_id':1, 'center': (140,1000)}, {'frame_id':1, 'center': (225,127)}]]
     # search_multi_car(pair, car_id, 0.01)
-    pair_2 = [[{'frame_id': 0, 'center': (195, 220), 'car_id': 1, 'down': 180}], \
-            [{'frame_id': 1, 'center': (198, 226), 'down': 191}, {'frame_id': 1, 'center': (100, -75), 'down': 191}, \
-             {'frame_id': 1, 'center': (140, 1000), 'down': 191}, {'frame_id': 1, 'center': (225, 127), 'down': 191}]]
+    pair_2 = [[{'frame_id': 0, 'center': (195, 220), 'car_id': 1}], \
+            [{'frame_id': 1, 'center': (198, 226)}, {'frame_id': 1, 'center': (100, -75)}, \
+             {'frame_id': 1, 'center': (140, 1000)}, {'frame_id': 1, 'center': (225, 127)}]]
     #print(search_one_car_init_0(pair_1))
     print(search_one_car(pair_2, 0.01))
 

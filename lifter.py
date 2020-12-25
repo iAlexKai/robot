@@ -6,7 +6,6 @@ Lifter_Button = 38
 Lifter_Up = 40
 lifting_time = 10
 
-
 def init_GPIO_and_lift_up():
     GPIO.setmode(GPIO.BOARD);
     
@@ -61,9 +60,9 @@ def light():
 
 if __name__ == "__main__":
     init_GPIO_and_lift_up()
-#    lifter_up()
+    lifter_up()
 #    time.sleep(5)
-    lifter_close()   
+#    lifter_close()   
     light()
 
 

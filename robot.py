@@ -25,7 +25,7 @@ DETECT_ID = 0
 SAVE_VIDEO = 0
 
 # to be modified global variables
-TOTAL_RUN_TIME = 0
+TOTAL_RUN_TIME = 10
 DETECT_TIME = 3000
 StraghtValue = 175
 currentX = 175
@@ -49,7 +49,7 @@ directionStates = ("left", "right", "straight", "stop")
 curCarState = "straight"
 
 # open the serial
-#serial_agent = serial.Serial("/dev/ttyUSB0", 9600)
+serial_agent = serial.Serial("/dev/ttyUSB0", 9600)
 
 
 def set_config():
@@ -355,8 +355,8 @@ def detect_and_alarm():
     RUN_TIME = False
     global DETECT_TIME
 
-    #cam = Camera_for_Robot(video_dev=DETECT_ID, image_width=IMAGE_WIDTH, image_height=IMAGE_HEIGHT)
-    cam = Camera_for_Robot(video_dev='./test.mp4', image_width=IMAGE_WIDTH, image_height=IMAGE_HEIGHT)
+    cam = Camera_for_Robot(video_dev=DETECT_ID, image_width=IMAGE_WIDTH, image_height=IMAGE_HEIGHT)
+    #cam = Camera_for_Robot(video_dev='./test.mp4', image_width=IMAGE_WIDTH, image_height=IMAGE_HEIGHT)
     cam.open()
 
 
@@ -382,10 +382,10 @@ def detect_and_alarm():
 def init_all():
     init_GPIO()
     light_on()
-    lifter_up()
+    #lifter_up()
 
 def stop_and_close():
-    lifter_down()
+    #lifter_down()
     light_off()
     serial_agent.close()
     pass
@@ -395,8 +395,8 @@ def main():
     
     init_all()
     
-    currentX = set_config()
-    run_straight()
+    #currentX = set_config()
+    #run_straight()
     detect_and_alarm()
     
     stop_and_close()
