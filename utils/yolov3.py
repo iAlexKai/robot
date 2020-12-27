@@ -112,6 +112,7 @@ class PostprocessYOLO(object):
             outputs_reshaped, resolution_raw, conf_th)
 
         if len(boxes_xywh) > 0:
+
             # convert (x, y, width, height) to (x1, y1, x2, y2)
             img_w, img_h = resolution_raw
             xx = boxes_xywh[:, 0].reshape(-1, 1)
@@ -124,7 +125,6 @@ class PostprocessYOLO(object):
             boxes = boxes.astype(np.int)
         else:
             boxes = np.zeros((0, 4), dtype=np.int)  # empty
-
         return boxes, categories, confidences
 
     def _reshape_output(self, output):
@@ -470,11 +470,13 @@ class TrtYOLOv3(object):
             inputs=self.inputs,
             outputs=self.outputs,
             stream=self.stream)
-
+        # import pdb
+        # pdb.set_trace()
         # Before doing post-processing, we need to reshape the outputs
         # as do_inference() will give us flat arrays.
         trt_outputs = [output.reshape(shape) for output, shape
                        in zip(trt_outputs, self.output_shapes)]
+
         network_time = (time.time() - network_start_time) * 1000
 
         # Run the post-processing algorithms on the TensorRT outputs

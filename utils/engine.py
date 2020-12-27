@@ -107,26 +107,31 @@ class BBoxVisualization():
             'counter': dict()
         }
         for bb, cf, cl in zip(boxes, confs, clss):
+            
             cl = int(cl)
-            x_min, y_min, x_max, y_max = bb[0], bb[1], bb[2], bb[3]
-            color = self.colors[cl]
-            cv2.rectangle(img, (x_min, y_min), (x_max, y_max), color, 2)
-            cv2.rectangle(blk, (x_min, y_min), (x_max, y_max), color, cv2.FILLED)
-            cls_name = self.cls_dict.get(cl, 'CLS{}'.format(cl))
-            img = draw_text(img,cls_name,x_min,y_min)  # draw cls_label
-            obj = Detect_Object(cl,cls_name,cf,x_min,y_min,x_max, y_max)  # create detection object        
-            #print(obj)
-            if cls_name in obj_dict['counter']:
-                obj_dict['counter'][cls_name] += 1
-            else:
-                obj_dict['counter'][cls_name] = 1
-            obj_dict['objects'] += 1
-
+            cls_name = self.cls_dict.get(cl, 'CLS{}'.format(cl))                
 #            self.print_stats(obj_dict)
             if cls_name == 'car':
+            #if cls_name == 'person':
+                x_min, y_min, x_max, y_max = bb[0], bb[1], bb[2], bb[3]
+                color = self.colors[cl]
+                #cv2.rectangle(img, (x_min, y_min), (x_max, y_max), color, 2)
+                #cv2.rectangle(blk, (x_min, y_min), (x_max, y_max), color, cv2.FILLED)
+                
+                #img = draw_text(img,cls_name,x_min,y_min)  # draw cls_label
+                obj = Detect_Object(cl,cls_name,cf,x_min,y_min,x_max, y_max)  # create detection object        
+        
+                if cls_name in obj_dict['counter']:
+                    obj_dict['counter'][cls_name] += 1
+                else:
+                    obj_dict['counter'][cls_name] = 1
+                obj_dict['objects'] += 1
+
                 #print("Detect car with amount: {}".format(obj_dict['counter']['car']))
 #                obj.print_info()  # print object info
+                #print(cl)
                 car_info = {'frame_id':frame_id, 'left':obj.x_min, 'right':obj.x_max, 'top':obj.y_min, 'down':obj.y_max, 'area':obj.area, 'center':obj.center}
+                car_info = [obj.x_min, obj.y_min, obj.x_max, obj.y_max, cf, cf, 2]
                 car_info_list.append(car_info)
 
         img = cv2.addWeighted(img, 1, blk, ALPHA, 1)

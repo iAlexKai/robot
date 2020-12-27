@@ -15,6 +15,9 @@ from utils.camera import add_camera_args, Camera
 from utils.visualization import open_window, show_fps, record_time, show_runtime
 from utils.engine import BBoxVisualization
 
+from utils.sort import *
+mot_tracker = Sort()
+
 from cal_dist import search_multi_car_0, search_multi_car_1, search_one_car_init, search_one_car, search_one_car_init_0
 
 WINDOW_NAME = 'TensorRT YOLOv3 Detector'
@@ -23,9 +26,13 @@ SUPPORTED_MODELS = [
     'ssd_mobilenet_v2_coco'
 ]
 
+colors=[(255,0,0),(0,255,0),(0,0,255),(255,0,255),(128,0,0),(0,128,0),(0,0,128),(128,0,128),(128,128,0),(0,128,128)]
+
+
 # Camera Infomation
 FRAME_DIFF = 0.05
 CAM_FPS = 30
+
 
 def parse_args():
     """Parse input arguments."""
@@ -55,6 +62,7 @@ def loop_and_detect(cam, runtime, trt_yolov3, conf_th, vis, window_name, total_t
       conf_th: confidence/score threshold for object detection.
       vis: for visualization.
     """
+
     import time
     start_time = time.time()
     speed_calculate_pair = []    
@@ -80,26 +88,38 @@ def loop_and_detect(cam, runtime, trt_yolov3, conf_th, vis, window_name, total_t
                 time_stamp = record_time(_preprocess_time, _postprocess_time, _network_time, _visualize_time)
                 show_runtime(time_stamp)
             else:
-                boxes, confs, clss, _, _, _ = trt_yolov3.detect(img, conf_th)
+                
+                output = trt_yolov3.detect(img, conf_th)
+                boxes, confs, clss, _, _, _ = output
+
                 img, _, car_info_list = vis.draw_bboxes(img, boxes, confs, clss, frame_id)
+
+            #pad_x = max(img.shape[0] - img.shape[1], 0) * (img_size / max(img.shape))
+            #pad_y = max(img.shape[1] - img.shape[0], 0) * (img_size / max(img.shape))
+            pad_x, pad_y = 0, 0
+            #import pdb
+            #pdb.set_trace()
+            img_width = img.shape[1]
+            img_height = img.shape[0]
+            unpad_h = img_height - pad_y
+            unpad_w = img_width - pad_x
+
             if len(car_info_list) != 0:
-                speed_calculate_pair.append(car_info_list)
-                if len(speed_calculate_pair) == 2:
-                    #import pdb
-                    #pdb.set_trace()
-                    if first_glance:
-                        _, cur_frame_car_list = search_one_car_init_0(speed_calculate_pair) 
-                        first_glance = False
-                    else:
-                        _, cur_frame_car_list = search_one_car(speed_calculate_pair, FRAME_DIFF*CAM_FPS)
-                    print("Detected {} cars".format(len(cur_frame_car_list)))
-                    if len(cur_frame_car_list) is not 0:
-                        for item in cur_frame_car_list:
-                            if type(item) is not dict:
-                                import pdb
-                                pdb.set_trace()
-                            print('car_id:{}, car_speed:{}, distance from camera:{}'.format(item['car_id'], item['car_speed'], item['car_2_cam']))
-                    speed_calculate_pair = [cur_frame_car_list]
+                tracked_objects = mot_tracker.update(np.array(car_info_list))
+
+                #unique_labels = detections[:, -1].cpu().unique()
+                #n_cls_preds = len(unique_labels)
+                for x1, y1, x2, y2, obj_id, cls_pred in tracked_objects:
+                    box_h = int(((y2 - y1) / unpad_h) * img.shape[0])
+                    box_w = int(((x2 - x1) / unpad_w) * img.shape[1])
+                    y1 = int(((y1 - pad_y // 2) / unpad_h) * img.shape[0])
+                    x1 = int(((x1 - pad_x // 2) / unpad_w) * img.shape[1])
+                    color = colors[int(obj_id) % len(colors)]
+
+                    #cls = classes[int(cls_pred)]
+                    cv2.rectangle(img, (x1, y1), (x1 + box_w, y1 + box_h), color, 4)
+                    cv2.putText(img, "Car" + "-" + str(int(obj_id)), (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                                (255, 255, 255), 2)
 
             fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
             img = show_fps(img, fps)

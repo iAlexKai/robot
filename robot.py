@@ -49,7 +49,7 @@ directionStates = ("left", "right", "straight", "stop")
 curCarState = "straight"
 
 # open the serial
-serial_agent = serial.Serial("/dev/ttyUSB0", 9600)
+# serial_agent = serial.Serial("/dev/ttyUSB0", 9600)
 
 
 def set_config():
@@ -393,7 +393,7 @@ def stop_and_close():
 
 def main():
     
-    init_all()
+    # init_all()
     
     #currentX = set_config()
     #run_straight()
