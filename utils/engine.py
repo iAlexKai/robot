@@ -130,7 +130,7 @@ class BBoxVisualization():
                 #print("Detect car with amount: {}".format(obj_dict['counter']['car']))
 #                obj.print_info()  # print object info
                 #print(cl)
-                car_info = {'frame_id':frame_id, 'left':obj.x_min, 'right':obj.x_max, 'top':obj.y_min, 'down':obj.y_max, 'area':obj.area, 'center':obj.center}
+                #car_info = {'frame_id':frame_id, 'left':obj.x_min, 'right':obj.x_max, 'top':obj.y_min, 'down':obj.y_max, 'area':obj.area, 'center':obj.center}
                 car_info = [obj.x_min, obj.y_min, obj.x_max, obj.y_max, cf, cf, 2]
                 car_info_list.append(car_info)
 

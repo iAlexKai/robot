@@ -111,10 +111,12 @@ def correct_distort_remap(image_path, save_path):
     dst = dst[y:y + h, x:x + w]
     cv2.imwrite(save_path, dst)
 
+
 def distance_to_camera(perWidth, knownWidth, focalLength):
     # 计算物体距摄像头的距离,单位：米
     # 参数：像素宽perWidth，物体已知距离knownWidth，和焦距focalLength
     return (knownWidth * focalLength) / perWidth
+
 
 def calculate_distance(left, right, knownWidth, focalLength_value):
     # 计算物体到摄像头的距离,单位：米
@@ -137,7 +139,19 @@ def calculate_distance(left, right, knownWidth, focalLength_value):
 
 #cal_speed
 #ppm:每像素实际距离
-
+#line:
+'''
+1m: 420
+3: 250
+5: 215
+10: 180
+15: 153
+20: 145
+30: 138
+50: 126
+80: 122
+100: 
+'''
 ''' 
 10: 
 20: 
@@ -151,83 +165,75 @@ def calculate_distance(left, right, knownWidth, focalLength_value):
 100: 
 '''
 def cal_speed_pixel(bottom_car_0, bottom_car_1, frame_time_diff):
-    # line = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
-    line = [293, 227, 203, 192, 185, 179, 177, 175, 174, 173]
-    ppm = []
+    # line = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    line = [195, 170, 155, 150, 146, 142, 140, 138, 136, 135]
+    line_5 = [245]
     # 0-5
-    ppm.append(5 / (480 - line[0]))
-    # 5-50
+    ppm_0_5 = []
+    ppm_0_5.append(5 / (480 - line_5[0]))
+    ppm = []
+    # 5-10
+    ppm.append(5 / (line_5[0] - line[0]))
     for i in range(9):
-        ppm.append(5 / (line[i] - line[i + 1]))
+        ppm.append(10 / (line[i] - line[i + 1]))
 
     # 0-5
-    if (line[0] < bottom_car_1 <= 480):
+    if (line_5[0] < bottom_car_1 <= 480):
+        pixel_length = bottom_car_1 - bottom_car_0
+        scale_real_length = pixel_length * ppm_0_5[0]
+        dis = (480 - bottom_car_1) * ppm_0_5[0]
+    # 5-10
+    if (line[0] < bottom_car_1 <= line_5[0]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[0]
-        dis = (480 - bottom_car_1) * ppm[0]
-    # 5-10
-    elif (line[1] < bottom_car_1 <= line[0]):
+        dis = 5 + (line_5[0] - bottom_car_1) * ppm[0]
+    # 10-20
+    if (line[1] < bottom_car_1 <= line[0]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[1]
-        dis = 5 + (line[0] - bottom_car_1) * ppm[1]
-    # 10-15
-    elif (line[2] < bottom_car_1 <= line[1]):
+        dis = 10 + (line[0] - bottom_car_1) * ppm[1]
+    # 20-30
+    if (line[2] < bottom_car_1 <= line[1]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[2]
-        dis = 10 + (line[1] - bottom_car_1) * ppm[2]
-    # 15-20
-    elif (line[3] < bottom_car_1 <= line[2]):
+        dis = 20 + (line[1] - bottom_car_1) * ppm[2]
+    # 30-40
+    if (line[3] < bottom_car_1 <= line[2]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[3]
-        dis = 15 + (line[2] - bottom_car_1) * ppm[3]
-    # 20-25
-    elif (line[4] < bottom_car_1 <= line[3]):
+        dis = 30 + (line[2] - bottom_car_1) * ppm[3]
+    # 40-50
+    if (line[4] < bottom_car_1 <= line[3]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[4]
-        dis = 20 + (line[3] - bottom_car_1) * ppm[4]
-    # 25-30
-    elif (line[5] < bottom_car_1 <= line[4]):
+        dis = 40 + (line[3] - bottom_car_1) * ppm[4]
+    # 50-60
+    if (line[5] < bottom_car_1 <= line[4]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[5]
-        dis = 25 + (line[4] - bottom_car_1) * ppm[5]
-    # 30-35
-    elif (line[6] < bottom_car_1 <= line[5]):
+        dis = 50 + (line[4] - bottom_car_1) * ppm[5]
+    # 60-70
+    if (line[6] < bottom_car_1 <= line[5]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[6]
-        dis = 30 + (line[5] - bottom_car_1) * ppm[6]
-    # 35-40
-    elif (line[7] < bottom_car_1 <= line[6]):
+        dis = 60 + (line[5] - bottom_car_1) * ppm[6]
+    # 70-80
+    if (line[7] < bottom_car_1 <= line[6]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[7]
-        dis = 35 + (line[6] - bottom_car_1) * ppm[7]
-    # 40-45
-    elif (line[8] < bottom_car_1 <= line[7]):
+        dis = 70 + (line[6] - bottom_car_1) * ppm[7]
+    # 80-90
+    if (line[8] < bottom_car_1 <= line[7]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[8]
-        dis = 40 + (line[7] - bottom_car_1) * ppm[8]
-    # 45以上
-    elif (0 < bottom_car_1 <= line[8]):
+        dis = 80 + (line[7] - bottom_car_1) * ppm[8]
+    # 90-100
+    if (0 < bottom_car_1 <= line[8]):
         pixel_length = bottom_car_1 - bottom_car_0
         scale_real_length = pixel_length * ppm[9]
-        dis = 45 + (line[8] - bottom_car_1) * ppm[9]
-    else:
-        print(bottom_car_1)
-        #import pdb
-        #pdb.set_trace()
-        scale_real_length = 0
-        dis = 0
-    '''
-    # 50以上
-    if (0 < bottom_car_1 <= line[9]):
-        pixel_length = bottom_car_1 - bottom_car_0
-        scale_real_length = pixel_length * ppm[9]
-        dis = 50 + (line[8] - bottom_car_1) * ppm[9]
-    '''
+        dis = 90 + (line[8] - bottom_car_1) * ppm[9]
+
     speed = scale_real_length / frame_time_diff
-    #import pdb
-    #pdb.set_trace()
-    speed = int(speed)
-    dis = int(dis)
     return speed, dis
 
 # 找出两帧中相同的车，并将第二帧作为初始状态

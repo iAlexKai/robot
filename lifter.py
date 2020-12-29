@@ -2,9 +2,9 @@ import RPi.GPIO as GPIO
 import time
 
 Light = 36
-Lifter_Button = 38
-Lifter_Up = 40
-lifting_time = 10
+Lifter_Button = 22
+Lifter_Up = 24
+lifting_time = 12
 
 def init_GPIO_and_lift_up():
     GPIO.setmode(GPIO.BOARD);
@@ -21,29 +21,28 @@ def init_GPIO_and_lift_up():
 def lifter_up():
     print("1")
     GPIO.output(Lifter_Button,GPIO.LOW)
- #   GPIO.output(Lifter_Up,GPIO.HIGH)
+    GPIO.output(Lifter_Up,GPIO.HIGH)
+ 
     time.sleep(lifting_time)
+    
     GPIO.output(Lifter_Button,GPIO.HIGH)
     GPIO.output(Lifter_Up,GPIO.HIGH)
     print(2)
 
-#    GPIO.output(Lifter_Up,GPIO.LOW)
-#    time.sleep(3)
-#    GPIO.output(Lifter_Up,GPIO.HIGH)
-#    time.sleep(1)
-#    GPIO.output(Lifter_Up,GPIO.LOW)
-#    time.sleep(3)
-#    GPIO.output(Lifter_Up,GPIO.HIGH)
-#    print("3")
 
 def lifter_close():
-    print(3)
-    start_time = time.time()
+#    print(3)
     GPIO.output(Lifter_Up, GPIO.LOW)
+    GPIO.output(Lifter_Button, GPIO.HIGH) 
+
+ 
+
     time.sleep(lifting_time)
-    print(4)
+#    print(4)
     GPIO.output(Lifter_Up,GPIO.HIGH)
     GPIO.output(Lifter_Button,GPIO.HIGH)
+
+  
 
 
 
@@ -60,9 +59,9 @@ def light():
 
 if __name__ == "__main__":
     init_GPIO_and_lift_up()
-    lifter_up()
-#    time.sleep(5)
-#    lifter_close()   
+    #lifter_up()
+    #time.sleep(5)
+    #lifter_close()   
     light()
 
 

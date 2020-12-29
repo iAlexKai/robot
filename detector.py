@@ -18,7 +18,7 @@ from utils.engine import BBoxVisualization
 from utils.sort import *
 mot_tracker = Sort()
 
-from cal_dist import search_multi_car_0, search_multi_car_1, search_one_car_init, search_one_car, search_one_car_init_0
+from cal_dist import cal_speed_pixel
 
 WINDOW_NAME = 'TensorRT YOLOv3 Detector'
 INPUT_HW = (300, 300)
@@ -30,9 +30,8 @@ colors=[(255,0,0),(0,255,0),(0,0,255),(255,0,255),(128,0,0),(0,128,0),(0,0,128),
 
 
 # Camera Infomation
-FRAME_DIFF = 0.05
 CAM_FPS = 30
-
+FRAME_DIFF = 20
 
 def parse_args():
     """Parse input arguments."""
@@ -65,10 +64,12 @@ def loop_and_detect(cam, runtime, trt_yolov3, conf_th, vis, window_name, total_t
 
     import time
     start_time = time.time()
-    speed_calculate_pair = []    
+    last_time = start_time
+    speed_calculate_pre = []    
 
     frame_id = -1
     first_glance = True
+    
     while time.time() - start_time < total_time:
         if cv2.getWindowProperty(window_name, 0) < 0:
             break
@@ -78,7 +79,12 @@ def loop_and_detect(cam, runtime, trt_yolov3, conf_th, vis, window_name, total_t
         frame_id += 1
         if frame_id % sys.maxsize == 0:
             frame_id = 0
-        elif frame_id % 20 != 0:
+        elif frame_id % FRAME_DIFF == 0:
+            time_diff = time.time() - last_time
+            last_time = time.time()
+            #import pdb
+            #pdb.set_trace()
+        elif frame_id % FRAME_DIFF != 0:
             continue
 
         if img is not None:
@@ -106,21 +112,36 @@ def loop_and_detect(cam, runtime, trt_yolov3, conf_th, vis, window_name, total_t
 
             if len(car_info_list) != 0:
                 tracked_objects = mot_tracker.update(np.array(car_info_list))
-
                 #unique_labels = detections[:, -1].cpu().unique()
                 #n_cls_preds = len(unique_labels)
+                car_id_list = []
                 for x1, y1, x2, y2, obj_id, cls_pred in tracked_objects:
                     box_h = int(((y2 - y1) / unpad_h) * img.shape[0])
                     box_w = int(((x2 - x1) / unpad_w) * img.shape[1])
                     y1 = int(((y1 - pad_y // 2) / unpad_h) * img.shape[0])
                     x1 = int(((x1 - pad_x // 2) / unpad_w) * img.shape[1])
-                    color = colors[int(obj_id) % len(colors)]
 
+                    if len(speed_calculate_pre) == 0:
+                        _, dist = cal_speed_pixel(0, y2, FRAME_DIFF*CAM_FPS)
+                        speed = 0
+                    else:
+                        _, dist = cal_speed_pixel(0, y2, FRAME_DIFF*CAM_FPS)
+                        speed = 0 
+                        for car_pre in speed_calculate_pre[0]:
+                            if obj_id == car_pre[4]:
+                                speed, _ = cal_speed_pixel(car_pre[3], y2, time_diff)
+                                #speed, _ = cal_speed_pixel(car_pre[5], y2, FRAME_DIFF*CAM_FPS)
+                    car_id_list.append([x1, y1, x2, y2, obj_id, dist, speed])
+
+                    color = colors[int(obj_id) % len(colors)]
                     #cls = classes[int(cls_pred)]
                     cv2.rectangle(img, (x1, y1), (x1 + box_w, y1 + box_h), color, 4)
-                    cv2.putText(img, "Car" + "-" + str(int(obj_id)), (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                                (255, 255, 255), 2)
-
+                    #import pdb
+                    #pdb.set_trace()
+                    print("y2:{}, speed:{}".format(y2, speed))
+                    cv2.putText(img, "Car" + "-" + str(int(obj_id)) + "   Dist-" + str(dist) + "   Speed-" + str(speed), (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                                (255, 255, 255), 1)
+                speed_calculate_pre = [car_id_list]
             fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
             img = show_fps(img, fps)
             cv2.imshow(window_name, img)
